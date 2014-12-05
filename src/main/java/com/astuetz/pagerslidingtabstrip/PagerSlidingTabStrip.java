@@ -432,21 +432,20 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
     }
 
     private void delegateForHeader(int position, float positionOffset) {
-        View v = tabsContainer.getChildAt(position);
 
-        if (v instanceof LinearLayout) {
+        LinearLayout currentTab = (LinearLayout) tabsContainer.getChildAt(position);
+        TextView headerCurrent = (TextView) currentTab.getChildAt(0);
+        headerCurrent.setAlpha(1 - positionOffset);
 
-            LinearLayout linearLayout = (LinearLayout) v;
-            TextView header = (TextView) linearLayout.getChildAt(0);
+        if (position + 1 < tabsContainer.getChildCount()) {
+            LinearLayout nextTab = (LinearLayout) tabsContainer.getChildAt(position + 1);
+            TextView headerNextTab = (TextView) nextTab.getChildAt(0);
 
-            header.setTextSize(TypedValue.COMPLEX_UNIT_PX, tabTextSize);
-            header.setTypeface(tabTypeface, tabTypefaceStyle);
-            header.setTextColor(tabTextColor);
-
-            header.setAlpha(1 - positionOffset);
+            headerNextTab.setAlpha(positionOffset);
         }
 
-        Log.w("PAGER_TAB_STRIP", "pos:" + position + " offest:" + positionOffset);
+
+        Log.w("PAGER_TAB_STRIP", "currentTab:" + position + " CurrentAlpha:" + (1 - positionOffset) + " nextTab:" + (position + 1) + " nextAlpha:" + positionOffset);
     }
 
     public void setIndicatorColor(int indicatorColor) {
