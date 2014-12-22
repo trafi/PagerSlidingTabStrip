@@ -402,7 +402,7 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
             invalidate();
 
             if (pager.getAdapter() instanceof HeaderTabProvider) {
-                delegateForHeader(position, positionOffset);
+                delegatePageScrolledForHeader(position, positionOffset);
             }
 
             if (delegatePageListener != null) {
@@ -426,21 +426,41 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
             if (delegatePageListener != null) {
                 delegatePageListener.onPageSelected(position);
             }
+
+            if (pager.getAdapter() instanceof HeaderTabProvider) {
+                delegatePageSelectedForHeader(position);
+            }
         }
 
     }
 
-    private void delegateForHeader(int position, float positionOffset) {
+    private void delegatePageSelectedForHeader(int position) {
+        LinearLayout tab;
+        TextView tabHeader;
 
-        LinearLayout currentTab = (LinearLayout) tabsContainer.getChildAt(position);
-        TextView headerCurrent = (TextView) currentTab.getChildAt(0);
-        headerCurrent.setAlpha(1 - positionOffset);
+        for (int i = 0; i < tabsContainer.getChildCount(); i++) {
+            tab = (LinearLayout) tabsContainer.getChildAt(position);
+            tabHeader = (TextView) tab.getChildAt(0);
+
+            if (position == i) {
+                tabHeader.setAlpha(1);
+            } else {
+                tabHeader.setAlpha(0);
+            }
+        }
+    }
+
+
+    private void delegatePageScrolledForHeader(int position, float positionOffset) {
+
+        LinearLayout tab = (LinearLayout) tabsContainer.getChildAt(position);
+        TextView header = (TextView) tab.getChildAt(0);
+        header.setAlpha(1 - positionOffset);
 
         if (position + 1 < tabsContainer.getChildCount()) {
-            LinearLayout nextTab = (LinearLayout) tabsContainer.getChildAt(position + 1);
-            TextView headerNextTab = (TextView) nextTab.getChildAt(0);
-
-            headerNextTab.setAlpha(positionOffset);
+            tab = (LinearLayout) tabsContainer.getChildAt(position + 1);
+            header = (TextView) tab.getChildAt(0);
+            header.setAlpha(positionOffset);
         }
 
     }
