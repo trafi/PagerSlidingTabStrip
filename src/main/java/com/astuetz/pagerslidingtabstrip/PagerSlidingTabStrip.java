@@ -391,6 +391,8 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 
     private class PageListener implements OnPageChangeListener {
 
+        private int mState = ViewPager.SCROLL_STATE_IDLE;
+
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 
@@ -408,10 +410,13 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
             if (delegatePageListener != null) {
                 delegatePageListener.onPageScrolled(position, positionOffset, positionOffsetPixels);
             }
+
         }
 
         @Override
         public void onPageScrollStateChanged(int state) {
+            mState = state;
+
             if (state == ViewPager.SCROLL_STATE_IDLE) {
                 scrollToChild(pager.getCurrentItem(), 0);
             }
@@ -419,6 +424,11 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
             if (delegatePageListener != null) {
                 delegatePageListener.onPageScrollStateChanged(state);
             }
+
+            if (mState == ViewPager.SCROLL_STATE_IDLE && pager.getAdapter() instanceof HeaderTabProvider) {
+                delegateStateChangedForHeader(pager.getCurrentItem());
+            }
+
         }
 
         @Override
@@ -426,20 +436,16 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
             if (delegatePageListener != null) {
                 delegatePageListener.onPageSelected(position);
             }
-
-            if (pager.getAdapter() instanceof HeaderTabProvider) {
-                delegatePageSelectedForHeader(position);
-            }
         }
 
     }
 
-    private void delegatePageSelectedForHeader(int position) {
+    private void delegateStateChangedForHeader(int position) {
         LinearLayout tab;
         TextView tabHeader;
 
         for (int i = 0; i < tabsContainer.getChildCount(); i++) {
-            tab = (LinearLayout) tabsContainer.getChildAt(position);
+            tab = (LinearLayout) tabsContainer.getChildAt(i);
             tabHeader = (TextView) tab.getChildAt(0);
 
             if (position == i) {
@@ -448,6 +454,7 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
                 tabHeader.setAlpha(0);
             }
         }
+
     }
 
 
