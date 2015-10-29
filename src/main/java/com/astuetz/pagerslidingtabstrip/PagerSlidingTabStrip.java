@@ -185,43 +185,43 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
     }
 
     public void notifyDataSetChanged() {
+        if(pager != null) {
+            tabsContainer.removeAllViews();
 
-        tabsContainer.removeAllViews();
+            tabCount = pager.getAdapter().getCount();
 
-        tabCount = pager.getAdapter().getCount();
+            for (int i = 0; i < tabCount; i++) {
 
-        for (int i = 0; i < tabCount; i++) {
-
-            if (pager.getAdapter() instanceof IconTabProvider) {
-                addIconTab(i, ((IconTabProvider) pager.getAdapter()).getPageIconResId(i));
-            } else if (pager.getAdapter() instanceof HeaderTabProvider) {
-                addTabWithHeader(i, pager.getAdapter().getPageTitle(i).toString(), ((HeaderTabProvider) pager.getAdapter()).getHeader(i));
-            } else {
-                addTextTab(i, pager.getAdapter().getPageTitle(i).toString());
-            }
-
-        }
-
-        updateTabStyles();
-
-        getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
-
-            @SuppressWarnings("deprecation")
-            @SuppressLint("NewApi")
-            @Override
-            public void onGlobalLayout() {
-
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-                    getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                if (pager.getAdapter() instanceof IconTabProvider) {
+                    addIconTab(i, ((IconTabProvider) pager.getAdapter()).getPageIconResId(i));
+                } else if (pager.getAdapter() instanceof HeaderTabProvider) {
+                    addTabWithHeader(i, pager.getAdapter().getPageTitle(i).toString(), ((HeaderTabProvider) pager.getAdapter()).getHeader(i));
                 } else {
-                    getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    addTextTab(i, pager.getAdapter().getPageTitle(i).toString());
                 }
 
-                currentPosition = pager.getCurrentItem();
-                scrollToChild(currentPosition, 0);
             }
-        });
 
+            updateTabStyles();
+
+            getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+
+                @SuppressWarnings("deprecation")
+                @SuppressLint("NewApi")
+                @Override
+                public void onGlobalLayout() {
+
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                        getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                    } else {
+                        getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    }
+
+                    currentPosition = pager.getCurrentItem();
+                    scrollToChild(currentPosition, 0);
+                }
+            });
+        }
     }
 
     private void addTextTab(final int position, String title) {
