@@ -170,7 +170,6 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
         indicatorColor = a.getColor(R.styleable.PagerSlidingTabStrip_pstsIndicatorColor, indicatorColor);
         underlineColor = a.getColor(R.styleable.PagerSlidingTabStrip_pstsUnderlineColor, underlineColor);
         dividerColor = a.getColor(R.styleable.PagerSlidingTabStrip_pstsDividerColor, dividerColor);
-        tabBadgeTextColor = a.getColor(R.styleable.PagerSlidingTabStrip_pstsBadgeTextColor, tabBadgeTextColor);
         tabBadgeTextSize = a.getDimensionPixelSize(R.styleable.PagerSlidingTabStrip_pstsBadgeTextSize, tabBadgeTextSize);
         tabBadgeBottomMargin = a.getDimensionPixelSize(R.styleable.PagerSlidingTabStrip_pstsBadgeBottomMargin, tabBadgeBottomMargin);
         tabBadgeLeftMargin = a.getDimensionPixelSize(R.styleable.PagerSlidingTabStrip_pstsBadgeLeftMargin, tabBadgeLeftMargin);

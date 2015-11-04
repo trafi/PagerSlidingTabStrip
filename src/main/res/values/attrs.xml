@@ -5,7 +5,6 @@
         <attr name="pstsIndicatorColor" format="color" />
         <attr name="pstsUnderlineColor" format="color" />
         <attr name="pstsDividerColor" format="color" />
-        <attr name="pstsBadgeTextColor" format="color" />
         <attr name="pstsBadgeBottomMargin" format="dimension" />
         <attr name="pstsBadgeLeftMargin" format="dimension" />
         <attr name="pstsIndicatorHeight" format="dimension" />
