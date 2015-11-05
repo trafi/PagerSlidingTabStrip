@@ -53,9 +53,9 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
     }
 
     public interface BadgeDataProvider {
-        int getBadgeResId(int position);
+        int getBadgeResId();
 
-        String getBadgeCount(int position);
+        String getBadgeCount();
     }
 
     public interface HeaderTabProvider {
@@ -228,11 +228,19 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
                     addIconTab(i, ((IconTabProvider) pager.getAdapter()).getPageIconResId(i));
                 } else if (pager.getAdapter() instanceof HeaderTabProvider) {
                     addTabWithHeader(i, pager.getAdapter().getPageTitle(i).toString(), ((HeaderTabProvider) pager.getAdapter()).getHeader(i));
+                } else if (pager.getAdapter() instanceof BadgeTabProvider) {
+                    BadgeTabProvider tabProvider = (BadgeTabProvider) pager.getAdapter();
+                    BadgeDataProvider dataProvider = tabProvider.getTabDataProvider(i);
+                    if (dataProvider != null) {
+                        addTabWithBadge(i, pager.getAdapter().getPageTitle(i).toString(),
+                                dataProvider.getBadgeCount(),
+                                dataProvider.getBadgeResId());
+                    } else addTextTab(i, pager.getAdapter().getPageTitle(i).toString());
                 } else if (pager.getAdapter() instanceof BadgeDataProvider) {
                     BadgeDataProvider dataProvider = (BadgeDataProvider) pager.getAdapter();
                     addTabWithBadge(i, pager.getAdapter().getPageTitle(i).toString(),
-                            dataProvider.getBadgeCount(i),
-                            dataProvider.getBadgeResId(i));
+                            dataProvider.getBadgeCount(),
+                            dataProvider.getBadgeResId());
                 } else {
                     addTextTab(i, pager.getAdapter().getPageTitle(i).toString());
                 }
