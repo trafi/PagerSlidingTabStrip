@@ -53,9 +53,9 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
     }
 
     public interface BadgeDataProvider {
-        int getBadgeResId();
+        int getBadgeResId(int position);
 
-        String getBadgeCount();
+        String getBadgeCount(int position);
     }
 
     public interface HeaderTabProvider {
@@ -233,14 +233,14 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
                     BadgeDataProvider dataProvider = tabProvider.getTabDataProvider(i);
                     if (dataProvider != null) {
                         addTabWithBadge(i, pager.getAdapter().getPageTitle(i).toString(),
-                                dataProvider.getBadgeCount(),
-                                dataProvider.getBadgeResId());
+                                dataProvider.getBadgeCount(i),
+                                dataProvider.getBadgeResId(i));
                     } else addTextTab(i, pager.getAdapter().getPageTitle(i).toString());
                 } else if (pager.getAdapter() instanceof BadgeDataProvider) {
                     BadgeDataProvider dataProvider = (BadgeDataProvider) pager.getAdapter();
                     addTabWithBadge(i, pager.getAdapter().getPageTitle(i).toString(),
-                            dataProvider.getBadgeCount(),
-                            dataProvider.getBadgeResId());
+                            dataProvider.getBadgeCount(i),
+                            dataProvider.getBadgeResId(i));
                 } else {
                     addTextTab(i, pager.getAdapter().getPageTitle(i).toString());
                 }
