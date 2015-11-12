@@ -28,15 +28,18 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.Locale;
@@ -44,7 +47,21 @@ import java.util.Locale;
 public class PagerSlidingTabStrip extends HorizontalScrollView {
 
     public interface IconTabProvider {
-        public int getPageIconResId(int position);
+        int getPageIconResId(int position);
+    }
+
+    public interface BadgeTabProvider {
+        BadgeDataProvider getTabDataProvider(int position);
+    }
+
+    public interface BadgeDataProvider {
+        int getBadgeResId(int position);
+
+        String getBadgeCount(int position);
+    }
+
+    public interface HeaderTabProvider {
+        String getHeader(int position);
     }
 
     // @formatter:off
@@ -53,6 +70,11 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
             android.R.attr.textColor
     };
     // @formatter:on
+
+    private final String TAG_TITLE = "text_title";
+    private final String TAG_HEADER = "text_header";
+    private final String TAG_BADGE = "text_badge";
+
 
     private LinearLayout.LayoutParams defaultTabLayoutParams;
     private LinearLayout.LayoutParams expandedTabLayoutParams;
@@ -82,11 +104,14 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
     private int indicatorHeight = 8;
     private int underlineHeight = 2;
     private int dividerPadding = 12;
-    private int tabPadding = 24;
+    private int tabPadding = 8;
     private int dividerWidth = 1;
 
     private int tabTextSize = 12;
+    private int tabBadgeTextSize = 10;
     private int tabTextColor = 0xFF666666;
+    private int tabBadgeTextColor = 0xFF000000;
+
     private Typeface tabTypeface = null;
     private int tabTypefaceStyle = Typeface.BOLD;
 
@@ -124,6 +149,7 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
         tabPadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, tabPadding, dm);
         dividerWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dividerWidth, dm);
         tabTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, tabTextSize, dm);
+        tabBadgeTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, tabBadgeTextSize, dm);
 
         // get system attrs (android:textSize and android:textColor)
 
@@ -141,6 +167,7 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
         indicatorColor = a.getColor(R.styleable.PagerSlidingTabStrip_pstsIndicatorColor, indicatorColor);
         underlineColor = a.getColor(R.styleable.PagerSlidingTabStrip_pstsUnderlineColor, underlineColor);
         dividerColor = a.getColor(R.styleable.PagerSlidingTabStrip_pstsDividerColor, dividerColor);
+        tabBadgeTextSize = a.getDimensionPixelSize(R.styleable.PagerSlidingTabStrip_pstsBadgeTextSize, tabBadgeTextSize);
         indicatorHeight = a.getDimensionPixelSize(R.styleable.PagerSlidingTabStrip_pstsIndicatorHeight, indicatorHeight);
         underlineHeight = a.getDimensionPixelSize(R.styleable.PagerSlidingTabStrip_pstsUnderlineHeight, underlineHeight);
         dividerPadding = a.getDimensionPixelSize(R.styleable.PagerSlidingTabStrip_pstsDividerPadding, dividerPadding);
@@ -185,7 +212,7 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
     }
 
     public void notifyDataSetChanged() {
-        if(pager != null) {
+        if (pager != null) {
             tabsContainer.removeAllViews();
 
             tabCount = pager.getAdapter().getCount();
@@ -196,6 +223,19 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
                     addIconTab(i, ((IconTabProvider) pager.getAdapter()).getPageIconResId(i));
                 } else if (pager.getAdapter() instanceof HeaderTabProvider) {
                     addTabWithHeader(i, pager.getAdapter().getPageTitle(i).toString(), ((HeaderTabProvider) pager.getAdapter()).getHeader(i));
+                } else if (pager.getAdapter() instanceof BadgeTabProvider) {
+                    BadgeTabProvider tabProvider = (BadgeTabProvider) pager.getAdapter();
+                    BadgeDataProvider dataProvider = tabProvider.getTabDataProvider(i);
+                    if (dataProvider != null) {
+                        addTabWithBadge(i, pager.getAdapter().getPageTitle(i).toString(),
+                                dataProvider.getBadgeCount(i),
+                                dataProvider.getBadgeResId(i));
+                    } else addTextTab(i, pager.getAdapter().getPageTitle(i).toString());
+                } else if (pager.getAdapter() instanceof BadgeDataProvider) {
+                    BadgeDataProvider dataProvider = (BadgeDataProvider) pager.getAdapter();
+                    addTabWithBadge(i, pager.getAdapter().getPageTitle(i).toString(),
+                            dataProvider.getBadgeCount(i),
+                            dataProvider.getBadgeResId(i));
                 } else {
                     addTextTab(i, pager.getAdapter().getPageTitle(i).toString());
                 }
@@ -230,8 +270,26 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
         tab.setText(title);
         tab.setGravity(Gravity.CENTER);
         tab.setSingleLine();
+        tab.setEllipsize(TextUtils.TruncateAt.END);
+        tab.setTag(TAG_TITLE);
 
         addTab(position, tab);
+    }
+
+    private void addTabWithBadge(final int position, String title, String badgeText, int badgeBgRes) {
+        if (badgeText != null) {
+            View view = LayoutInflater.from(getContext()).inflate(R.layout.tab_badge_layout, tabsContainer, false);
+            TextView titleView = (TextView) view.findViewById(R.id.textView_title);
+            titleView.setText(title);
+            titleView.setTag(TAG_TITLE);
+            TextView badgeView = (TextView) view.findViewById(R.id.textView_badge);
+            badgeView.setText(badgeText);
+            badgeView.setBackgroundResource(badgeBgRes);
+            badgeView.setTag(TAG_BADGE);
+            addTab(position, view);
+        } else addTextTab(position, title);
+
+
     }
 
     private void addTabWithHeader(final int position, String title, String header) {
@@ -242,12 +300,15 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
         titleView.setText(title);
         titleView.setGravity(Gravity.CENTER);
         titleView.setSingleLine();
+        titleView.setEllipsize(TextUtils.TruncateAt.END);
+
+        titleView.setTag(TAG_TITLE);
 
         TextView headerView = new TextView(getContext());
         headerView.setText(header);
         headerView.setGravity(Gravity.CENTER);
         headerView.setSingleLine();
-        headerView.setTag("header");
+        headerView.setTag(TAG_HEADER);
 
         linearLayout.addView(headerView);
         linearLayout.addView(titleView);
@@ -302,27 +363,57 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
                     }
                 }
             } else if (v instanceof LinearLayout) {
-
                 LinearLayout linearLayout = (LinearLayout) v;
-                TextView header = (TextView) linearLayout.getChildAt(0);
 
-                header.setTextSize(TypedValue.COMPLEX_UNIT_PX, tabTextSize);
-                header.setTypeface(tabTypeface, tabTypefaceStyle);
-                header.setTextColor(tabTextColor);
+                for (int j = 0; j < linearLayout.getChildCount(); j++) {
+                    View view = linearLayout.getChildAt(j);
+                    if (view.getTag() != null) {
+                        switch (String.valueOf(view.getTag())) {
+                            case TAG_HEADER:
+                                if (view instanceof TextView) {
+                                    TextView header = (TextView) view;
+                                    header.setTextSize(TypedValue.COMPLEX_UNIT_PX, tabTextSize);
+                                    header.setTypeface(tabTypeface, tabTypefaceStyle);
+                                    header.setTextColor(tabTextColor);
+                                    if (i != 0) {
+                                        header.setAlpha(0);
+                                    }
+                                }
+                                break;
+                        }
 
-                if (i != 0) {
-                    header.setAlpha(0);
+                    }
                 }
 
-                TextView title = (TextView) linearLayout.getChildAt(1);
 
-                title.setTextSize(TypedValue.COMPLEX_UNIT_PX, tabTextSize);
-                title.setTypeface(tabTypeface, tabTypefaceStyle);
-                title.setTextColor(tabTextColor);
+            } else if (v instanceof RelativeLayout) {
+                RelativeLayout relativeLayout = (RelativeLayout) v;
 
+                for (int j = 0; j < relativeLayout.getChildCount(); j++) {
+                    View view = relativeLayout.getChildAt(j);
+                    if (view.getTag() != null) {
+                        switch (String.valueOf(view.getTag())) {
+                            case TAG_TITLE:
+                                if (view instanceof TextView) {
+                                    TextView title = (TextView) view;
+                                    title.setTextSize(TypedValue.COMPLEX_UNIT_PX, tabTextSize);
+                                    title.setTypeface(tabTypeface, tabTypefaceStyle);
+                                    title.setTextColor(tabTextColor);
+                                }
+                                break;
+                            case TAG_BADGE:
+                                if (view instanceof TextView) {
+                                    TextView badge = (TextView) view;
+                                    badge.setTextSize(TypedValue.COMPLEX_UNIT_PX, tabBadgeTextSize);
+                                    badge.setTypeface(tabTypeface, tabTypefaceStyle);
+                                    badge.setTextColor(tabBadgeTextColor);
+                                }
+                                break;
+                        }
+                    }
+                }
             }
         }
-
     }
 
     private void scrollToChild(int position, int offset) {
@@ -611,6 +702,12 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 
     public int getTabPaddingLeftRight() {
         return tabPadding;
+    }
+
+    @Override
+    public void setBackgroundColor(int color) {
+        super.setBackgroundColor(color);
+        tabBadgeTextColor = color;
     }
 
     @Override
