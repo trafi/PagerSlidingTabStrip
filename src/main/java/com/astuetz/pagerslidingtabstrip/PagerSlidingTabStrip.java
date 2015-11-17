@@ -380,6 +380,14 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
                                     }
                                 }
                                 break;
+                            case TAG_TITLE:
+                                if (view instanceof TextView) {
+                                    TextView title = (TextView) view;
+                                    title.setTextSize(TypedValue.COMPLEX_UNIT_PX, tabTextSize);
+                                    title.setTypeface(tabTypeface, tabTypefaceStyle);
+                                    title.setTextColor(tabTextColor);
+                                }
+                                break;
                         }
 
                     }
