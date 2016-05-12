@@ -339,6 +339,7 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
     }
 
     private void addTab(final int position, View tab) {
+        tab.setAlpha(pager.getCurrentItem() == position ? 1f : 0.53f);
         tab.setFocusable(true);
         tab.setOnClickListener(new OnClickListener() {
             @Override
@@ -537,11 +538,6 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
             if (delegatePageListener != null) {
                 delegatePageListener.onPageScrollStateChanged(state);
             }
-
-            if (mState == ViewPager.SCROLL_STATE_IDLE && pager.getAdapter() instanceof HeaderTabProvider) {
-                delegateStateChangedForHeader(pager.getCurrentItem());
-            }
-
         }
 
         @Override
@@ -549,6 +545,10 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
             if (delegatePageListener != null) {
                 delegatePageListener.onPageSelected(position);
             }
+            if (pager.getAdapter() instanceof HeaderTabProvider) {
+                delegateStateChangedForHeader(pager.getCurrentItem());
+            }
+            delegateStateChangedForTabLayout(pager.getCurrentItem());
         }
 
     }
@@ -565,6 +565,19 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
                 tabHeader.setAlpha(1);
             } else {
                 tabHeader.setAlpha(0);
+            }
+        }
+
+    }
+
+    private void delegateStateChangedForTabLayout(int position) {
+        View view;
+        for (int i = 0; i < tabsContainer.getChildCount(); i++) {
+            view = tabsContainer.getChildAt(i);
+            if (position == i) {
+                view.setAlpha(1);
+            } else {
+                view.setAlpha(0.53f);
             }
         }
 
