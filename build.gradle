@@ -26,5 +26,5 @@ android {
 }
 
 dependencies {
-    implmentation "com.android.support:appcompat-v7:$supportLibVersion"
+    implementation "com.android.support:appcompat-v7:$supportLibVersion"
 }
